@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+body { @apply bg-pitch text-slate-200 antialiased; }
+
+.glass { @apply border border-line bg-card/70 backdrop-blur-xl; }
+.card { @apply glass rounded-2xl; }
+.stat { @apply text-2xl font-semibold text-white; }
+.label { @apply text-xs uppercase tracking-widest text-slate-400; }
+.skeleton { @apply rounded-xl bg-gradient-to-r from-line via-slate-700/40 to-line bg-[length:200%_100%] animate-shimmer; }
+.link { @apply text-accent hover:text-white transition-colors; }
+.chip { @apply rounded-full border border-line bg-white/5 px-3 py-1 text-xs text-slate-300; }
