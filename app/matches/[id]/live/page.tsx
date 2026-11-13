@@ -19,7 +19,7 @@ export default function LivePage() {
       }
     };
     load();
-    const t = setInterval(load, 30000);
+    const t = setInterval(load, 5000);
     return () => clearInterval(t);
   }, [id]);
 
