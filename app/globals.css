@@ -2,13 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-body { @apply bg-pitch text-slate-200 antialiased; }
+:root { color-scheme: light; }
+body { @apply bg-white text-[#1d1d1f] antialiased; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif; }
 
-.glass { @apply border border-line bg-card/70 backdrop-blur-xl; }
-.card { @apply glass rounded-2xl; }
-.stat { @apply text-2xl font-semibold text-white; }
-.label { @apply text-xs uppercase tracking-widest text-slate-400; }
-.skeleton { @apply rounded-xl bg-gradient-to-r from-line via-slate-700/40 to-line bg-[length:200%_100%] animate-shimmer; }
-.link { @apply text-accent hover:text-white transition-colors; }
-.chip { @apply rounded-full border border-line bg-white/5 px-3 py-1 text-xs text-slate-300; }
+.glass { @apply border border-black/5 bg-white/80 backdrop-blur-xl; }
+.card { @apply glass rounded-3xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]; }
+.stat { @apply text-3xl font-semibold tracking-tight text-[#1d1d1f]; }
+.label { @apply text-xs font-medium uppercase tracking-widest text-[#86868b]; }
+.skeleton { @apply rounded-2xl bg-[#f5f5f7]; }
+.link { @apply text-[#0071e3] hover:underline; }
+.chip { @apply rounded-full bg-[#f5f5f7] px-3 py-1 text-xs font-medium text-[#1d1d1f]; }
+.tab { @apply rounded-full px-4 py-2 text-sm font-medium text-[#1d1d1f] transition hover:bg-black/5; }
+.tab-active { @apply bg-black text-white; }
+.live-dot { @apply inline-block h-2 w-2 rounded-full bg-[#ff3b30]; }

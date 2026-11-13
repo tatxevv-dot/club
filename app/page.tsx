@@ -1,28 +1,49 @@
+"use client";
 import Link from "next/link";
-import { Hero } from "@/components/hero";
-import { Section } from "@/components/section";
-import { MatchCardSkeleton } from "@/components/skeletons";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function HomePage() {
+  const [matches, setMatches] = useState<any[] | null>(null);
+  useEffect(() => {
+    supabase.from("v_recent_matches").select("*").order("kickoff_at", { ascending: false }).limit(12).then(({ data }) => setMatches(data ?? []));
+  }, []);
   return (
     <div className="space-y-10">
-      <Hero />
-      <Section title="Матчи дня" subtitle="Обновляется автоматически">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <MatchCardSkeleton key={i} />)}
+      <section className="pt-6">
+        <h1 className="text-4xl font-semibold tracking-tight text-[#1d1d1f] sm:text-5xl">Футбол. Без лишнего.</h1>
+        <p className="mt-3 max-w-xl text-lg text-[#6e6e73]">Матчи, игроки, команды и глубокая статистика — всё в одном месте.</p>
+      </section>
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold tracking-tight">Матчи</h2>
+          <Link href="/matches" className="link text-sm">Все матчи →</Link>
         </div>
-      </Section>
-      <Section title="Топ-5 лиг и Лига чемпионов" subtitle="Полная статистика, события и аналитика">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {["Premier League","La Liga","Serie A","Bundesliga","Ligue 1","UEFA Champions League"].map((name) => (
-            <Link key={name} href={`/leagues`} className="card group p-5 transition hover:-translate-y-1 hover:border-accent/50">
-              <div className="text-lg font-semibold text-white">{name}</div>
-              <div className="mt-2 text-sm text-slate-400">Таблицы, матчи, игроки, xG и события</div>
-              <div className="mt-4 text-sm text-accent group-hover:text-white">Открыть лигу →</div>
-            </Link>
+        {!matches ? (
+          <div className="grid gap-3 sm:grid-cols-2">{Array.from({length:4}).map((_,i)=><div key={i} className="skeleton h-24" />)}</div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {matches.map((m) => (
+              <Link key={m.id} href={`/match/${m.id}`} className="card p-5 transition hover:shadow-lg">
+                <div className="flex items-center justify-between text-xs text-[#86868b]"><span>{m.league_name}</span><span>{m.status === 'IN PLAY' && <span className="live-dot mr-1" />}{m.status}</span></div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="font-medium">{m.home_team}</span>
+                  <span className="text-lg font-semibold">{m.home_score ?? "–"} : {m.away_score ?? "–"}</span>
+                  <span className="font-medium">{m.away_team}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+      <section>
+        <h2 className="mb-4 text-2xl font-semibold tracking-tight">Лиги</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {["Premier League","La Liga","Serie A","Bundesliga","Ligue 1","UEFA Champions League"].map((n) => (
+            <Link key={n} href="/leagues" className="card p-5 text-center transition hover:shadow-lg"><div className="font-medium">{n}</div></Link>
           ))}
         </div>
-      </Section>
+      </section>
     </div>
   );
 }
