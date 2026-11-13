@@ -36,14 +36,20 @@ for (const c of comps) {
   const players = new Map();
   const matchRows = [];
   for (const m of matches) {
-    for (const side of [m.home_team, m.away_team]) teams.set(String(side.team_id), { source:'statsbomb', source_id:String(side.team_id), name: side.team_name || `Team ${side.team_id}`, country: side.country?.name ?? null });
+    const home = m.home_team;
+    const away = m.away_team;
+    teams.set(String(home.home_team_id), { source:'statsbomb', source_id:String(home.home_team_id), name: home.home_team_name || `Team ${home.home_team_id}`, country: home.country?.name ?? null });
+    teams.set(String(away.away_team_id), { source:'statsbomb', source_id:String(away.away_team_id), name: away.away_team_name || `Team ${away.away_team_id}`, country: away.country?.name ?? null });
     matchRows.push({ source:'statsbomb', source_id:String(m.match_id), league_id:leagueRow.id, season_id:seasonRow.id, home_team_id:null, away_team_id:null, kickoff_at:m.match_date ? new Date(m.match_date+'T'+(m.kick_off||'00:00:00')+'Z').toISOString() : null, status:m.match_status, home_score:m.home_score, away_score:m.away_score, stage:m.competition_stage?.name, round:m.match_week ? `Matchweek ${m.match_week}` : null, venue:m.stadium?.name, referee:m.referee?.name, raw:m });
   }
   await upsert('teams', [...teams.values()]);
   const { data: teamRows, error: teamError } = await sb.from('teams').select('id,source_id').eq('source','statsbomb');
   if (teamError) throw teamError;
   const teamId = new Map(teamRows.map(t => [t.source_id, t.id]));
-  for (const r of matchRows) { r.home_team_id = teamId.get(String(r.raw.home_team.team_id)); r.away_team_id = teamId.get(String(r.raw.away_team.team_id)); }
+  for (const r of matchRows) {
+    r.home_team_id = teamId.get(String(r.raw.home_team.home_team_id));
+    r.away_team_id = teamId.get(String(r.raw.away_team.away_team_id));
+  }
   await upsert('matches', matchRows);
   const { data: matchRowsDb, error: matchError } = await sb.from('matches').select('id,source_id,raw').eq('source','statsbomb');
   if (matchError) throw matchError;
@@ -53,9 +59,10 @@ for (const c of comps) {
     if (!mid) continue;
     const lineupRows = [];
     for (const side of m.lineups ?? []) {
+      const teamKey = String(side.team_id ?? side.home_team_id ?? side.away_team_id);
       for (const p of side.lineup ?? []) {
         players.set(String(p.player_id), { source:'statsbomb', source_id:String(p.player_id), full_name: p.player_name || `Player ${p.player_id}`, known_name: p.player_nickname || p.player_name || `Player ${p.player_id}`, position:p.position?.name ?? null });
-        lineupRows.push({ match_id:mid, team_id:teamId.get(String(side.team_id)), player_id:null, is_starter:p.starting_lineup ?? false, position:p.position?.name ?? null, shirt_number:p.jersey_number ?? null, raw:p });
+        lineupRows.push({ match_id:mid, team_id:teamId.get(teamKey), player_id:null, is_starter:p.starting_lineup ?? false, position:p.position?.name ?? null, shirt_number:p.jersey_number ?? null, raw:p });
       }
     }
     await upsert('players', [...players.values()]);
