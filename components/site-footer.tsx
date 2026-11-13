@@ -1,7 +1,7 @@
 export function SiteFooter() {
   return (
-    <footer className="border-t border-black/5 py-8">
-      <div className="mx-auto max-w-6xl px-4 text-sm text-[#86868b] sm:px-6">Club · данные из открытых источников</div>
+    <footer className="mx-auto hidden max-w-7xl px-6 pb-10 text-center text-xs text-muted md:block">
+      © 2026 Club — футбольная аналитика
     </footer>
   );
 }
