@@ -19,16 +19,18 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 4. `npm install`
 5. `npm run dev`
 
+## Импорт данных
+Скрипт `scripts/import-statsbomb.mjs` загружает открытые данные StatsBomb: лиги, сезоны, команды, игроков, матчи и составы.
+
+Для GitHub Actions добавь секреты:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Workflow `.github/workflows/sync.yml` запускается ежедневно в 03:00 UTC и вручную через Run workflow.
+
 ## Что уже есть
 - Полная реляционная схема под event data, xG, shotmaps, passing, defense, 360.
 - Страницы: главная, лиги, команды, игроки, матчи.
 - Профили игрока, команды, матча, лиги.
 - Скелетоны, анимации, адаптив, минималистичный тёмный UI.
 - Готовая база под StatsBomb Open Data, Understat и football-data.org.
-
-## Дальше
-- Скрипты импорта football-data.org.
-- Скрипты импорта Understat.
-- Импорт StatsBomb Open Data.
-- Страницы сравнения игроков.
-- Плеер трансляций позже.
