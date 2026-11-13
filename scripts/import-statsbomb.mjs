@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
-const sb = createClient(url, key);
+
+const sb = createClient(url, key, {
+  auth: { persistSession: false },
+  realtime: { transport: WebSocket }
+});
+
 const BASE = 'https://raw.githubusercontent.com/statsbomb/open-data/master/data';
 
 const upsert = async (table, rows) => {
@@ -19,10 +25,12 @@ const comps = competitions.filter(c => wanted.has(c.competition_name));
 for (const c of comps) {
   const league = { source: 'statsbomb', source_id: String(c.competition_id), name: c.competition_name, country: c.country_name, type: c.competition_type };
   await upsert('leagues', [league]);
-  const { data: leagueRow } = await sb.from('leagues').select('id').eq('source','statsbomb').eq('source_id',String(c.competition_id)).single();
+  const { data: leagueRow, error: leagueError } = await sb.from('leagues').select('id').eq('source','statsbomb').eq('source_id',String(c.competition_id)).single();
+  if (leagueError) throw leagueError;
   const season = { source: 'statsbomb', source_id: `${c.competition_id}-${c.season_id}`, league_id: leagueRow.id, name: c.season_name, start_date: c.season_start_date, end_date: c.season_end_date, is_current: false };
   await upsert('seasons', [season]);
-  const { data: seasonRow } = await sb.from('seasons').select('id').eq('source','statsbomb').eq('source_id',season.source_id).single();
+  const { data: seasonRow, error: seasonError } = await sb.from('seasons').select('id').eq('source','statsbomb').eq('source_id',season.source_id).single();
+  if (seasonError) throw seasonError;
   const matches = await (await fetch(`${BASE}/matches/${c.competition_id}/${c.season_id}.json`)).json();
   const teams = new Map();
   const players = new Map();
@@ -32,11 +40,13 @@ for (const c of comps) {
     matchRows.push({ source:'statsbomb', source_id:String(m.match_id), league_id:leagueRow.id, season_id:seasonRow.id, home_team_id:null, away_team_id:null, kickoff_at:m.match_date ? new Date(m.match_date+'T'+(m.kick_off||'00:00:00')+'Z').toISOString() : null, status:m.match_status, home_score:m.home_score, away_score:m.away_score, stage:m.competition_stage?.name, round:m.match_week ? `Matchweek ${m.match_week}` : null, venue:m.stadium?.name, referee:m.referee?.name, raw:m });
   }
   await upsert('teams', [...teams.values()]);
-  const { data: teamRows } = await sb.from('teams').select('id,source_id').eq('source','statsbomb');
+  const { data: teamRows, error: teamError } = await sb.from('teams').select('id,source_id').eq('source','statsbomb');
+  if (teamError) throw teamError;
   const teamId = new Map(teamRows.map(t => [t.source_id, t.id]));
   for (const r of matchRows) { r.home_team_id = teamId.get(String(r.raw.home_team.team_id)); r.away_team_id = teamId.get(String(r.raw.away_team.team_id)); }
   await upsert('matches', matchRows);
-  const { data: matchRowsDb } = await sb.from('matches').select('id,source_id,raw').eq('source','statsbomb');
+  const { data: matchRowsDb, error: matchError } = await sb.from('matches').select('id,source_id,raw').eq('source','statsbomb');
+  if (matchError) throw matchError;
   const matchId = new Map(matchRowsDb.map(m => [m.source_id, m.id]));
   for (const m of matches) {
     const mid = matchId.get(String(m.match_id));
@@ -49,7 +59,8 @@ for (const c of comps) {
       }
     }
     await upsert('players', [...players.values()]);
-    const { data: playerRows } = await sb.from('players').select('id,source_id').eq('source','statsbomb');
+    const { data: playerRows, error: playerError } = await sb.from('players').select('id,source_id').eq('source','statsbomb');
+    if (playerError) throw playerError;
     const playerId = new Map(playerRows.map(p => [p.source_id, p.id]));
     for (const l of lineupRows) l.player_id = playerId.get(String(l.raw.player_id));
     if (lineupRows.length) {
