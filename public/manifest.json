@@ -1,0 +1,9 @@
+{
+  "name": "Football Analytics",
+  "short_name": "Football",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007aff",
+  "icons": []
+}

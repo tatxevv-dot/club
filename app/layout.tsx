@@ -1,25 +1,14 @@
-import type { Metadata } from "next";
+"use client";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-
-export const metadata: Metadata = {
-  title: "Club — футбольная статистика",
-  description: "Матчи, игроки, команды, xG и глубокая аналитика топ-лиг."
-};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-      </head>
-      <body className="min-h-dvh pb-28 md:pb-0">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-7xl px-3 pb-16 pt-4 sm:px-6">{children}</main>
-        <SiteFooter />
+    <html lang="ru" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
