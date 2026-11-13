@@ -11,9 +11,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      </head>
       <body className="min-h-dvh pb-28 md:pb-0">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6">{children}</main>
+        <main className="mx-auto w-full max-w-7xl px-3 pb-16 pt-4 sm:px-6">{children}</main>
         <SiteFooter />
       </body>
     </html>
