@@ -7,6 +7,7 @@ export default function ComparePage() {
   const [players, setPlayers] = useState<any[]>([]);
   const [a, setA] = useState("");
   const [b, setB] = useState("");
+  const [position, setPosition] = useState("");
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -23,13 +24,15 @@ export default function ComparePage() {
 
   const pa = players.find((p) => p.id === a);
   const pb = players.find((p) => p.id === b);
+  const filtered = players.filter((p) => !position || p.position === position);
 
   return (
     <div className="container-page space-y-8">
       <h1 className="text-3xl font-semibold tracking-tight">Сравнение игроков</h1>
-      <div className="card p-4 grid gap-4 md:grid-cols-2">
-        <select value={a} onChange={(e) => setA(e.target.value)} className="input"><option value="">Игрок A</option>{players.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
-        <select value={b} onChange={(e) => setB(e.target.value)} className="input"><option value="">Игрок B</option>{players.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
+      <div className="card p-4 grid gap-4 md:grid-cols-3">
+        <select value={position} onChange={(e) => setPosition(e.target.value)} className="input"><option value="">Все позиции</option>{["GK","DF","MF","FW"].map((p) => <option key={p}>{p}</option>)}</select>
+        <select value={a} onChange={(e) => setA(e.target.value)} className="input"><option value="">Игрок A</option>{filtered.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
+        <select value={b} onChange={(e) => setB(e.target.value)} className="input"><option value="">Игрок B</option>{filtered.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
       </div>
       {data?.a && data?.b && (
         <div className="card p-6">
