@@ -1,36 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { PlayerRadar } from "@/components/player-radar";
 
 export function PlayerProfile({ id }: { id: string }) {
   const [player, setPlayer] = useState<any>(null);
-  const [season, setSeason] = useState<any>(null);
-  const [tab, setTab] = useState("overview");
+  const [stats, setStats] = useState<any>(null);
+
   useEffect(() => {
-    supabase.from("players").select("*").eq("id", id).single().then(({ data }) => setPlayer(data));
-    supabase.from("player_season_stats").select("*").eq("player_id", id).limit(1).then(({ data }) => setSeason(data?.[0] ?? null));
+    supabase.from("players").select("*,team:teams(name)").eq("id", id).single().then(({ data }) => setPlayer(data));
+    supabase.from("player_season_stats").select("*").eq("player_id", id).maybeSingle().then(({ data }) => setStats(data));
   }, [id]);
-  if (!player) return <div className="skeleton h-64" />;
+
+  if (!player) return <div className="skeleton h-40" />;
+
   return (
-    <div className="space-y-6">
-      <div className="card p-8 text-center">
-        <div className="mx-auto h-24 w-24 rounded-full bg-[#f5f5f7]" />
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight">{player.full_name}</h1>
-        <p className="text-[#86868b]">{player.position ?? "—"}</p>
-      </div>
-      <div className="flex justify-center gap-2">
-        {["overview","matches","stats"].map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`tab ${tab === t ? "tab-active" : ""}`}>{t === "overview" ? "Обзор" : t === "matches" ? "Матчи" : "Статистика"}</button>
-        ))}
-      </div>
-      <div className="card p-6">
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          <div><div className="label">Матчи</div><div className="stat">{season?.appearances ?? "—"}</div></div>
-          <div><div className="label">Голы</div><div className="stat">{season?.goals ?? "—"}</div></div>
-          <div><div className="label">Ассисты</div><div className="stat">{season?.assists ?? "—"}</div></div>
-          <div><div className="label">xG</div><div className="stat">{season?.xg ?? "—"}</div></div>
-        </div>
-      </div>
+    <div className="container-page space-y-6">
+      <div className="card p-8"><h1 className="text-3xl font-semibold tracking-tight">{player.name}</h1><p className="text-[#86868b]">{player.team?.name} · {player.position} · {player.league}</p></div>
+      {stats && <div className="card p-6"><h2 className="mb-4 text-lg font-semibold">Radar-профиль сезона</h2><PlayerRadar a={stats} b={stats} nameA={player.name} nameB={player.name} /></div>}
     </div>
   );
 }
