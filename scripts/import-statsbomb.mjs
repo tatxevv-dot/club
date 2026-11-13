@@ -23,11 +23,11 @@ const wanted = new Set(['Premier League','La Liga','Serie A','Bundesliga','Ligue
 const comps = competitions.filter(c => wanted.has(c.competition_name));
 
 for (const c of comps) {
-  const league = { source: 'statsbomb', source_id: String(c.competition_id), name: c.competition_name, country: c.country_name, type: c.competition_type };
+  const league = { source: 'statsbomb', source_id: String(c.competition_id), name: c.competition_name || `Competition ${c.competition_id}`, country: c.country_name, type: c.competition_type };
   await upsert('leagues', [league]);
   const { data: leagueRow, error: leagueError } = await sb.from('leagues').select('id').eq('source','statsbomb').eq('source_id',String(c.competition_id)).single();
   if (leagueError) throw leagueError;
-  const season = { source: 'statsbomb', source_id: `${c.competition_id}-${c.season_id}`, league_id: leagueRow.id, name: c.season_name, start_date: c.season_start_date, end_date: c.season_end_date, is_current: false };
+  const season = { source: 'statsbomb', source_id: `${c.competition_id}-${c.season_id}`, league_id: leagueRow.id, name: c.season_name || `Season ${c.season_id}`, start_date: c.season_start_date, end_date: c.season_end_date, is_current: false };
   await upsert('seasons', [season]);
   const { data: seasonRow, error: seasonError } = await sb.from('seasons').select('id').eq('source','statsbomb').eq('source_id',season.source_id).single();
   if (seasonError) throw seasonError;
@@ -36,7 +36,7 @@ for (const c of comps) {
   const players = new Map();
   const matchRows = [];
   for (const m of matches) {
-    for (const side of [m.home_team, m.away_team]) teams.set(String(side.team_id), { source:'statsbomb', source_id:String(side.team_id), name:side.team_name, country:side.country?.name ?? null });
+    for (const side of [m.home_team, m.away_team]) teams.set(String(side.team_id), { source:'statsbomb', source_id:String(side.team_id), name: side.team_name || `Team ${side.team_id}`, country: side.country?.name ?? null });
     matchRows.push({ source:'statsbomb', source_id:String(m.match_id), league_id:leagueRow.id, season_id:seasonRow.id, home_team_id:null, away_team_id:null, kickoff_at:m.match_date ? new Date(m.match_date+'T'+(m.kick_off||'00:00:00')+'Z').toISOString() : null, status:m.match_status, home_score:m.home_score, away_score:m.away_score, stage:m.competition_stage?.name, round:m.match_week ? `Matchweek ${m.match_week}` : null, venue:m.stadium?.name, referee:m.referee?.name, raw:m });
   }
   await upsert('teams', [...teams.values()]);
@@ -54,7 +54,7 @@ for (const c of comps) {
     const lineupRows = [];
     for (const side of m.lineups ?? []) {
       for (const p of side.lineup ?? []) {
-        players.set(String(p.player_id), { source:'statsbomb', source_id:String(p.player_id), full_name:p.player_name, known_name:p.player_nickname || p.player_name, position:p.position?.name ?? null });
+        players.set(String(p.player_id), { source:'statsbomb', source_id:String(p.player_id), full_name: p.player_name || `Player ${p.player_id}`, known_name: p.player_nickname || p.player_name || `Player ${p.player_id}`, position:p.position?.name ?? null });
         lineupRows.push({ match_id:mid, team_id:teamId.get(String(side.team_id)), player_id:null, is_starter:p.starting_lineup ?? false, position:p.position?.name ?? null, shirt_number:p.jersey_number ?? null, raw:p });
       }
     }
