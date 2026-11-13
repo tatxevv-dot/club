@@ -57,7 +57,6 @@ for (const c of comps) {
   for (const m of matches) {
     const mid = matchId.get(String(m.match_id));
     if (!mid) continue;
-
     const lineups = await (await fetch(`${BASE}/lineups/${m.match_id}.json`)).json();
     const players = new Map();
     const lineupRows = [];
@@ -77,60 +76,6 @@ for (const c of comps) {
       const { error } = await sb.from('match_lineups').upsert(lineupRows, { onConflict: 'match_id,player_id' });
       if (error) console.warn('lineups', error.message);
     }
-
-    const events = await (await fetch(`${BASE}/events/${m.match_id}.json`)).json();
-    const eventRows = [];
-    const shotRows = [];
-    const passRows = [];
-    const defRows = [];
-    for (const e of events) {
-      const base = {
-        match_id: mid,
-        source: 'statsbomb',
-        source_event_id: String(e.id),
-        minute: e.minute ?? null,
-        second: e.second ?? null,
-        period: e.period?.name ?? null,
-        event_type: e.type?.name ?? 'Unknown',
-        team_id: teamId.get(String(e.team?.id)),
-        player_id: playerId.get(String(e.player?.id)),
-        related_player_id: e.related_player ? playerId.get(String(e.related_player.id)) : null,
-        outcome: e.outcome?.name ?? null,
-        start_x: e.location?.[0] ?? null,
-        start_y: e.location?.[1] ?? null,
-        end_x: e.pass?.end_location?.[0] ?? null,
-        end_y: e.pass?.end_location?.[1] ?? null,
-        detail: e.detail ?? null,
-        raw: e
-      };
-      eventRows.push(base);
-      if (base.event_type === 'Shot') {
-        shotRows.push({ match_id: mid, event_id: null, player_id: base.player_id, team_id: base.team_id, minute: base.minute, x: base.start_x, y: base.start_y, xg: e.shot?.statsbomb_xg ?? null, outcome: base.outcome, body_part: e.shot?.body_part?.name ?? null, technique: e.shot?.technique?.name ?? null, is_penalty: !!e.shot?.penalty, is_own_goal: !!e.shot?.own_goal, assist_player_id: e.pass?.assisted_shot_id ? playerId.get(String(e.pass.assisted_shot_id)) : null, freeze_frame: e.shot?.freeze_frame ?? null, raw: e });
-      }
-      if (base.event_type === 'Pass') {
-        passRows.push({ match_id: mid, event_id: null, player_id: base.player_id, recipient_player_id: e.pass?.recipient ? playerId.get(String(e.pass.recipient.id)) : null, team_id: base.team_id, minute: base.minute, start_x: base.start_x, start_y: base.start_y, end_x: base.end_x, end_y: base.end_y, length: e.pass?.length ?? null, angle: e.pass?.angle ?? null, is_progressive: !!e.pass?.progressive, is_key_pass: !!e.pass?.key_pass, is_cross: !!e.pass?.cross, is_through_ball: !!e.pass?.through_ball, is_switch: !!e.pass?.switch, under_pressure: !!e.under_pressure, outcome: base.outcome, raw: e });
-      }
-      if (['Tackle','Interception','Clearance','Block','Duel','Pressure','Ball Recovery'].includes(base.event_type)) {
-        defRows.push({ match_id: mid, event_id: null, player_id: base.player_id, team_id: base.team_id, minute: base.minute, event_type: base.event_type, x: base.start_x, y: base.start_y, outcome: base.outcome, raw: e });
-      }
-    }
-    if (eventRows.length) {
-      const { error } = await sb.from('match_events').upsert(eventRows, { onConflict: 'source,source_event_id' });
-      if (error) console.warn('events', error.message);
-    }
-    if (shotRows.length) {
-      const { error } = await sb.from('shot_events').upsert(shotRows, { onConflict: 'id' });
-      if (error) console.warn('shots', error.message);
-    }
-    if (passRows.length) {
-      const { error } = await sb.from('pass_events').upsert(passRows, { onConflict: 'id' });
-      if (error) console.warn('passes', error.message);
-    }
-    if (defRows.length) {
-      const { error } = await sb.from('defensive_events').upsert(defRows, { onConflict: 'id' });
-      if (error) console.warn('defense', error.message);
-    }
-    console.log(`Imported ${eventRows.length} events for match ${m.match_id}`);
   }
-  console.log(`Finished ${c.competition_name} ${c.season_name}`);
+  console.log(`Finished ${c.competition_name} ${c.season_name}: matches, teams, players, lineups imported. Events are fetched on demand.`);
 }
